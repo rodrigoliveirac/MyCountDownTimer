@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var timer: CountDownTimer
 
-    private var timeValue: Long = 120000L
+    private var timeValue: Long = 1200L
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         tvTimeValue.text = updateTimeTextView(timeValue) //* 1200000 milliseconds = 20 minutes */
 
-        if (currentValueTime <= 0L) currentValueTime = timeValue else currentValueTime
+        if (currentValueTime < 0L || currentValueTime == 0L) currentValueTime = timeValue else currentValueTime
 
         clickToStart.setOnClickListener {
             if (isRunning) {
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun start() {
-        Log.i("currentTime", currentValueTime.toString())
+
         timer = object : CountDownTimer(currentValueTime, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 currentValueTime = millisUntilFinished
@@ -66,7 +66,8 @@ class MainActivity : AppCompatActivity() {
             override fun onFinish() {
                 tvTimeValue.text = "Done"
                 isRunning = false
-                currentValueTime = 0L
+                currentValueTime = timeValue
+                clickToStart.text = "START AGAIN"
             }
 
         }.start()
