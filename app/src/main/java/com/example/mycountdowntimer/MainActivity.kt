@@ -8,11 +8,12 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import java.util.*
-import kotlin.properties.Delegates
 
 
 data class Timer(var time: Long)
 class MainActivity : AppCompatActivity() {
+
+    private var currentValueTime: Long = 0L
 
     private var isRunning = false
 
@@ -22,14 +23,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var timer: CountDownTimer
 
     private var timeValue: Long = 120000L
-
-    private var time: Timer = Timer(time = 120000L)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Log.d("CREATE", "onCreate")
 
         if (savedInstanceState != null) {
             timeValue = savedInstanceState.getLong(TIME_VALUE_KEY)
             isRunning = savedInstanceState.getBoolean(IS_RUNNING_KEY)
+            currentValueTime = savedInstanceState.getLong(CURRENT_TIME_VALUE)
         }
 
         setContentView(R.layout.activity_main)
@@ -38,8 +40,10 @@ class MainActivity : AppCompatActivity() {
 
         tvTimeValue = findViewById(R.id.tv_time)
 
-
         tvTimeValue.text = updateTimeTextView(timeValue) //* 1200000 milliseconds = 20 minutes */
+
+
+        if (currentValueTime <= 0L) currentValueTime = timeValue else currentValueTime
 
         clickToStart.setOnClickListener {
             if (isRunning) {
@@ -50,6 +54,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupCountDownTimer()
+
     }
 
     private fun start() {
@@ -71,6 +76,7 @@ class MainActivity : AppCompatActivity() {
 
         if (savedInstanceState != null) {
             timeValue = savedInstanceState.getLong(TIME_VALUE_KEY)
+            currentValueTime = savedInstanceState.getLong(CURRENT_TIME_VALUE)
             isRunning = savedInstanceState.getBoolean(IS_RUNNING_KEY)
             tvTimeValue.text = savedInstanceState.getString(TV_TIME)
         }
@@ -79,6 +85,7 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.run {
             putLong(TIME_VALUE_KEY, timeValue)
+            putLong(CURRENT_TIME_VALUE, currentValueTime)
             putBoolean(IS_RUNNING_KEY, isRunning)
             putString(TV_TIME, tvTimeValue.text.toString())
         }
@@ -89,14 +96,13 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         if (isRunning) {
             timer.start()
-            Log.d("START", "onStart")
         }
+        Log.d("START", "onStart")
     }
 
     override fun onResume() {
         super.onResume()
         Log.d("onResume", "onResume")
-
     }
 
     override fun onPause() {
@@ -120,11 +126,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupCountDownTimer() {
-        timer = object : CountDownTimer(timeValue, 1000) {
-
+        timer = object : CountDownTimer(currentValueTime, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                tvTimeValue.text = updateTimeTextView(millisUntilFinished)
-                timeValue = millisUntilFinished
+                currentValueTime = millisUntilFinished
+                tvTimeValue.text = updateTimeTextView(currentValueTime)
             }
 
             override fun onFinish() {
@@ -153,6 +158,7 @@ class MainActivity : AppCompatActivity() {
         private const val TIME_VALUE_KEY = "time_value_key"
         private const val IS_RUNNING_KEY = "IS_RUNNING_KEY"
         private const val TV_TIME = "TV_TIME"
+        private const val CURRENT_TIME_VALUE = "CURRENT_TIME_VALUE"
     }
 
 }
