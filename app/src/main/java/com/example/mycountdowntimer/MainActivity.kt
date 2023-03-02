@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.*
 import java.util.*
 
 
@@ -42,7 +43,6 @@ class MainActivity : AppCompatActivity() {
 
         tvTimeValue.text = updateTimeTextView(timeValue) //* 1200000 milliseconds = 20 minutes */
 
-
         if (currentValueTime <= 0L) currentValueTime = timeValue else currentValueTime
 
         clickToStart.setOnClickListener {
@@ -53,12 +53,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        setupCountDownTimer()
-
     }
 
     private fun start() {
-        timer.start()
+        Log.i("currentTime", currentValueTime.toString())
+        timer = object : CountDownTimer(currentValueTime, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                currentValueTime = millisUntilFinished
+                tvTimeValue.text = updateTimeTextView(currentValueTime)
+            }
+
+            override fun onFinish() {
+                tvTimeValue.text = "Done"
+                isRunning = false
+                currentValueTime = 0L
+            }
+
+        }.start()
+
         isRunning = true
         clickToStart.text = "PAUSE"
     }
@@ -95,7 +107,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         if (isRunning) {
-            timer.start()
+            start()
         }
         Log.d("START", "onStart")
     }
@@ -123,21 +135,12 @@ class MainActivity : AppCompatActivity() {
     override fun onRestart() {
         super.onRestart()
         Log.d("RESTART", "onRestart")
+        Log.i("time", timeValue.toString())
+        Log.i("currentTime", currentValueTime.toString())
     }
 
     private fun setupCountDownTimer() {
-        timer = object : CountDownTimer(currentValueTime, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                currentValueTime = millisUntilFinished
-                tvTimeValue.text = updateTimeTextView(currentValueTime)
-            }
 
-            override fun onFinish() {
-                tvTimeValue.text = "Done"
-                isRunning = false
-            }
-
-        }
     }
 
     private fun updateTimeTextView(ms: Long): String {
