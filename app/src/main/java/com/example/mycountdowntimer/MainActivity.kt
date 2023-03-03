@@ -1,51 +1,76 @@
 package com.example.mycountdowntimer
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.PersistableBundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
+import com.example.mycountdowntimer.R.id.*
+import com.example.mycountdowntimer.R.layout.activity_main
+import com.google.android.material.textfield.TextInputEditText
 import java.util.*
 
-
-data class Timer(var time: Long)
 class MainActivity : AppCompatActivity() {
 
-    private var currentValueTime: Long = 0L
+
+    private lateinit var timer: CountDownTimer
+    private var timeValue: Long = 0
+    private var currentValueTime: Long = 0
 
     private var isRunning = false
 
     private lateinit var tvTimeValue: TextView
+    private lateinit var editTextTime: EditText
+
     private lateinit var clickToStart: Button
-
-    private lateinit var timer: CountDownTimer
-
-    private var timeValue: Long = 1200L
+    private lateinit var clickToNewTime: Button
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         Log.d("CREATE", "onCreate")
-
         if (savedInstanceState != null) {
             timeValue = savedInstanceState.getLong(TIME_VALUE_KEY)
             isRunning = savedInstanceState.getBoolean(IS_RUNNING_KEY)
             currentValueTime = savedInstanceState.getLong(CURRENT_TIME_VALUE)
         }
 
-        setContentView(R.layout.activity_main)
+        setContentView(activity_main)
 
-        clickToStart = findViewById(R.id.button)
+        clickToStart = findViewById(button)
 
-        tvTimeValue = findViewById(R.id.tv_time)
+        tvTimeValue = findViewById(tv_time)
 
-        tvTimeValue.text = updateTimeTextView(timeValue) //* 1200000 milliseconds = 20 minutes */
+        clickToNewTime = findViewById(newTime_button)
 
-        if (currentValueTime < 0L || currentValueTime == 0L) currentValueTime = timeValue else currentValueTime
+        editTextTime = findViewById(editText_time)
+
+        if (isRunning) {
+            editTextTime.visibility = View.INVISIBLE
+            tvTimeValue.visibility = View.VISIBLE
+            clickToNewTime.visibility = View.GONE
+        } else {
+            editTextTime.visibility = View.VISIBLE
+            tvTimeValue.visibility = View.INVISIBLE
+        }
+
+        //* 1200000 milliseconds = 20 minutes */
 
         clickToStart.setOnClickListener {
+
+            timeValue = editTextTime.text.toString().toLong() * 1000L
+
+            if (currentValueTime <= 0L) currentValueTime = timeValue else currentValueTime
+
+            tvTimeValue.text = updateTimeTextView(currentValueTime)
+
+            editTextTime.visibility = View.INVISIBLE
+            tvTimeValue.visibility = View.VISIBLE
+
             if (isRunning) {
                 pause()
             } else {
@@ -53,10 +78,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        clickToNewTime.setOnClickListener {
+            editTextTime.visibility = View.VISIBLE
+            tvTimeValue.visibility = View.INVISIBLE
+            clickToStart.text = "START"
+        }
+
     }
 
     private fun start() {
+        setupTimer()
+        isRunning = true
+        clickToStart.text = "PAUSE"
+    }
 
+    private fun setupTimer() {
         timer = object : CountDownTimer(currentValueTime, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 currentValueTime = millisUntilFinished
@@ -66,14 +102,12 @@ class MainActivity : AppCompatActivity() {
             override fun onFinish() {
                 tvTimeValue.text = "Done"
                 isRunning = false
-                currentValueTime = timeValue
+                currentValueTime = 0
                 clickToStart.text = "START AGAIN"
+                clickToNewTime.visibility = View.VISIBLE
             }
 
         }.start()
-
-        isRunning = true
-        clickToStart.text = "PAUSE"
     }
 
     private fun pause() {
@@ -110,38 +144,6 @@ class MainActivity : AppCompatActivity() {
         if (isRunning) {
             start()
         }
-        Log.d("START", "onStart")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d("onResume", "onResume")
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d("PAUSE", "onPause")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.d("STOP", "onStop")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d("DESTROY", "onDestroy")
-    }
-
-    override fun onRestart() {
-        super.onRestart()
-        Log.d("RESTART", "onRestart")
-        Log.i("time", timeValue.toString())
-        Log.i("currentTime", currentValueTime.toString())
-    }
-
-    private fun setupCountDownTimer() {
-
     }
 
     private fun updateTimeTextView(ms: Long): String {
